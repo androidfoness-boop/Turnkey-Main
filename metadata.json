@@ -1,0 +1,5 @@
+{
+  "name": "TurnKey Main",
+  "description": "A comprehensive service request and team management application designed for Admins, Supervisors, Employers, and Employees. It features role-based access control, ticket management, user administration, and analytics dashboards.",
+  "requestFramePermissions": []
+}
