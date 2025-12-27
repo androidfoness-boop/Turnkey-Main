@@ -10,17 +10,19 @@ import DashboardLayout from './dashboards/DashboardLayout';
 import Modal from './common/Modal';
 import CreateTicketForm from './dashboards/shared/CreateTicketForm';
 import ProfileModal from './ProfileModal';
+import CreateUserForm from './dashboards/shared/CreateUserForm';
 
 const Dashboard: React.FC = () => {
     const { currentUser } = useAppContext();
     const [activeView, setActiveView] = useState('overview');
     const [isCreateTicketModalOpen, setCreateTicketModalOpen] = useState(false);
+    const [isCreateUserModalOpen, setCreateUserModalOpen] = useState(false);
     const [isProfileModalOpen, setProfileModalOpen] = useState(false);
 
     const renderDashboard = () => {
         switch (currentUser?.role) {
             case Role.ADMIN:
-                return <AdminDashboard activeView={activeView} />;
+                return <AdminDashboard activeView={activeView} onOpenCreateUserModal={() => setCreateUserModalOpen(true)} />;
             case Role.SUPERVISOR:
                 return <SupervisorDashboard activeView={activeView} />;
             case Role.EMPLOYER:
@@ -48,6 +50,9 @@ const Dashboard: React.FC = () => {
                 <CreateTicketForm onFormSubmit={() => setCreateTicketModalOpen(false)} />
             </Modal>
             <ProfileModal isOpen={isProfileModalOpen} onClose={() => setProfileModalOpen(false)} />
+             <Modal isOpen={isCreateUserModalOpen} onClose={() => setCreateUserModalOpen(false)} title="Create New User">
+                <CreateUserForm onFormSubmit={() => setCreateUserModalOpen(false)} />
+            </Modal>
         </>
     );
 };

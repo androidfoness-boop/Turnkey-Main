@@ -2,6 +2,7 @@
 import React, { ReactNode, useMemo } from 'react';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Role } from '../../types';
+import { LogoutIcon } from '../../constants';
 
 interface NavItem {
     id: string;
@@ -31,7 +32,7 @@ const ICONS: { [key: string]: React.FC } = {
 
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeView, setActiveView, onCreateTicket, onOpenProfile }) => {
-    const { currentUser } = useAppContext();
+    const { currentUser, logout } = useAppContext();
 
     const navigationItems = useMemo(() => {
         if (!currentUser) return [];
@@ -71,7 +72,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeView,
                      <button onClick={onOpenProfile} className="text-subtle-text hover:text-light-text transition-colors p-2 rounded-full hover:bg-secondary-dark">
                         <SettingsIcon />
                     </button>
-                    {/* Could add a logout button here later */}
+                    <button onClick={logout} className="text-subtle-text hover:text-light-text transition-colors p-2 rounded-full hover:bg-secondary-dark">
+                        <LogoutIcon />
+                    </button>
                 </div>
             </header>
 

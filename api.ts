@@ -3,7 +3,7 @@ import { User, Role, ServiceTicket, TicketStatus, TicketCategory, EmployeeHierar
 
 // In a real backend, this would be a database.
 let users: User[] = [
-    { id: 'admin-001', email: 'admin@turnkey.com', password: 'Password1!', role: Role.ADMIN, name: 'Admin User', contactNumber: '1234567890', address: '1 Admin Way', pan: 'ABCDE1234F' },
+    { id: 'admin-001', email: 'admin@turnkey.com', password: 'Password1!', role: Role.ADMIN, name: 'Admin User', contactNumber: '1234567890', address: '1 Admin Way', pan: 'ABCDE1234F', organizationId: 'Org-000001' },
     { id: 'sup-000001', email: 'supervisor@turnkey.com', password: 'Password1!', role: Role.SUPERVISOR, name: 'Supervisor Sam', contactNumber: '2345678901', address: '2 Supervisor St', pan: 'BCDEF2345G', aadhaar: '123456789012', organizationId: 'Org-000001' },
     { id: 'emplr-000001', email: 'employer@turnkey.com', password: 'Password1!', role: Role.EMPLOYER, name: 'Employer Emily', contactNumber: '3456789012', address: '3 Employer Ave', pan: 'CDEFG3456H', companyName: 'Emily\'s Enterprises', organizationId: 'Org-000001'},
     { id: 'emp-000001', email: 'employee@turnkey.com', password: 'Password1!', role: Role.EMPLOYEE, name: 'Employee Eric', contactNumber: '4567890123', address: '4 Employee Ct', pan: 'DEFG H4567I', isAvailable: true, organizationId: 'Org-000001' },
@@ -38,13 +38,13 @@ export const apiSignup = (userData: Omit<User, 'id'>): Promise<User> => {
             }
 
             let newId = '';
-            let organizationId: string | undefined;
+            let derivedOrganizationId: string | undefined = userData.organizationId;
 
             switch (userData.role) {
-                 case Role.ADMIN:
+                case Role.ADMIN:
                     newId = `Org-${String(userCounters.admin).padStart(6, '0')}`;
                     userCounters.admin++;
-                    organizationId = newId;
+                    derivedOrganizationId = newId;
                     break;
                 case Role.SUPERVISOR:
                     newId = `Sup-${String(userCounters.supervisor).padStart(6, '0')}`;
@@ -53,7 +53,10 @@ export const apiSignup = (userData: Omit<User, 'id'>): Promise<User> => {
                 case Role.EMPLOYER:
                     newId = `Emplr-${String(userCounters.employer).padStart(6, '0')}`;
                     userCounters.employer++;
-                    organizationId = `Org-${String(userCounters.admin-1).padStart(6, '0')}`;
+                    if (!derivedOrganizationId && userCounters.admin > 1) {
+                         // Fallback for public signup to associate with the last created organization.
+                        derivedOrganizationId = `Org-${String(userCounters.admin - 1).padStart(6, '0')}`;
+                    }
                     break;
                 case Role.EMPLOYEE:
                     newId = `Emp-${String(userCounters.employee).padStart(6, '0')}`;
@@ -61,7 +64,7 @@ export const apiSignup = (userData: Omit<User, 'id'>): Promise<User> => {
                     break;
             }
 
-            const newUser: User = { ...userData, id: newId, organizationId };
+            const newUser: User = { ...userData, id: newId, organizationId: derivedOrganizationId };
             users.push(newUser);
             resolve(newUser);
         }, FAKE_LATENCY);
