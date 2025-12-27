@@ -25,7 +25,7 @@ const NotificationHandler: React.FC = () => {
     }
 
     return (
-        <div className="fixed top-5 right-5 z-50 space-y-3">
+        <div className="fixed top-5 inset-x-0 z-50 flex flex-col items-center space-y-3">
             {notifications.map(notification => (
                 <div key={notification.id} className={`max-w-sm w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden border-l-4 ${getBorderColor(notification.type)}`}>
                     <div className="p-4">
