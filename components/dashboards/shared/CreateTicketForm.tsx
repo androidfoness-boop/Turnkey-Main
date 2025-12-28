@@ -76,77 +76,59 @@ const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onFormSubmit }) => 
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4 text-sm text-light-text">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                    <InputField name="title" label="Issue Title" value={formData.title} onChange={handleChange} required />
+        <form onSubmit={handleSubmit} className="space-y-4 text-sm text-text-primary-dark">
+            <div className="space-y-4">
+                <InputField name="title" label="Issue Title" value={formData.title} onChange={handleChange} required />
+                <div className="grid grid-cols-2 gap-4">
+                    <SelectField name="priority" label="Priority" value={formData.priority} onChange={handleChange} options={Object.values(TicketPriority)} />
+                    <SelectField name="requestType" label="Request Type" value={formData.requestType} onChange={handleChange} options={Object.values(RequestType)} />
+                    <SelectField name="category" label="Category" value={formData.category} onChange={handleChange} options={Object.values(TicketCategory)} />
+                    <SelectField name="hierarchy" label="Required Hierarchy" value={formData.hierarchy} onChange={handleChange} options={Object.values(EmployeeHierarchy)} />
                 </div>
-                <SelectField name="priority" label="Priority" value={formData.priority} onChange={handleChange} options={Object.values(TicketPriority)} />
-                <SelectField name="requestType" label="Request Type" value={formData.requestType} onChange={handleChange} options={Object.values(RequestType)} />
-                <SelectField name="category" label="Category" value={formData.category} onChange={handleChange} options={Object.values(TicketCategory)} />
-                <SelectField name="hierarchy" label="Required Hierarchy" value={formData.hierarchy} onChange={handleChange} options={Object.values(EmployeeHierarchy)} />
-                <InputField name="issueType" label="Issue Type (e.g., Leak, Power Outage)" value={formData.issueType} onChange={handleChange} />
-                <InputField name="tenure" label="Tenure (days)" type="number" value={String(formData.tenure)} onChange={handleChange} required />
+                <InputField name="issueType" label="Issue Type (e.g., Leak)" value={formData.issueType} onChange={handleChange} />
+                <TextAreaField name="description" label="Description" value={formData.description} onChange={handleChange} required />
             </div>
             
-            <TextAreaField name="description" label="Description" value={formData.description} onChange={handleChange} required />
-            <TextAreaField name="details" label="More Details" value={formData.details} onChange={handleChange} />
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <InputField name="startDate" label="Start Date & Time" type="datetime-local" value={formData.startDate} onChange={handleChange} required />
-                <InputField name="endDate" label="End Date & Time" type="datetime-local" value={formData.endDate} onChange={handleChange} required />
-                <div>
-                    <label className="block font-medium text-subtle-text">Calculated Days</label>
-                    <p className="mt-1 p-2 h-10 border rounded-md bg-primary-dark border-gray-600 flex items-center">{days || 1}</p>
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+                <InputField name="startDate" label="Start Date" type="datetime-local" value={formData.startDate} onChange={handleChange} required />
+                <InputField name="endDate" label="End Date" type="datetime-local" value={formData.endDate} onChange={handleChange} required />
             </div>
             
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="grid grid-cols-2 gap-2">
-                    <InputField name="employeesNeeded" label="Employees Needed" type="number" value={String(formData.employeesNeeded)} onChange={handleChange} required />
-                    <SelectField name="employeeType" label="Staff Type" value={formData.employeeType} onChange={handleChange} options={Object.values(EmployeeType)} />
-                </div>
-                 <div>
-                    <label htmlFor="assignedTo" className="block font-medium text-subtle-text">Assign To (Optional)</label>
-                    <select id="assignedTo" name="assignedTo" multiple value={formData.assignedTo} onChange={handleEmployeeSelect} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 bg-secondary-dark focus:outline-none focus:ring-accent-blue focus:border-accent-blue sm:text-sm rounded-md h-24">
-                       {availableEmployees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
-                    </select>
-                </div>
+             <div className="grid grid-cols-2 gap-4">
+                <InputField name="employeesNeeded" label="# of Employees" type="number" value={String(formData.employeesNeeded)} onChange={handleChange} required />
+                <SelectField name="employeeType" label="Staff Type" value={formData.employeeType} onChange={handleChange} options={Object.values(EmployeeType)} />
             </div>
             
-            <div className="flex justify-end pt-4">
-                <button type="submit" className="px-4 py-2 bg-accent-blue text-white font-semibold rounded-lg shadow-md hover:bg-opacity-80 transition-colors">Submit Request</button>
+            <div className="pt-4 flex justify-end">
+                <button type="submit" className="px-5 py-2.5 bg-accent-orange text-white font-semibold rounded-full shadow-md hover:bg-accent-orange-hover transition-colors">Submit Request</button>
             </div>
         </form>
     );
 };
 
-// Helper components for form fields
+const baseInputClasses = "w-full bg-dark-input rounded-lg py-2 px-3 text-text-primary-dark placeholder-text-secondary-dark outline-none focus:ring-2 focus:ring-accent-orange transition-all border border-border-dark focus:border-accent-orange";
+
 const InputField: React.FC<{name: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, type?: string, required?: boolean}> = ({ name, label, value, onChange, type = 'text', required = false}) => (
     <div>
-        <label htmlFor={name} className="block font-medium text-subtle-text">{label}</label>
+        <label htmlFor={name} className="block font-medium text-text-secondary-dark mb-1">{label}</label>
         <input 
-            id={name} 
-            name={name} 
-            type={type} 
-            value={value} 
-            onChange={onChange} 
-            required={required} 
-            className="mt-1 block w-full h-10 px-3 py-2 bg-secondary-dark border border-gray-600 rounded-md shadow-sm focus:ring-accent-blue focus:border-accent-blue text-light-text"
+            id={name} name={name} type={type} value={value} 
+            onChange={onChange} required={required} 
+            className={baseInputClasses}
             style={type === 'datetime-local' ? { colorScheme: 'dark' } : {}}
         />
     </div>
 );
 const TextAreaField: React.FC<{name: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void, required?: boolean}> = ({ name, label, value, onChange, required = false}) => (
     <div>
-        <label htmlFor={name} className="block font-medium text-subtle-text">{label}</label>
-        <textarea id={name} name={name} value={value} onChange={onChange} required={required} rows={3} className="mt-1 block w-full px-3 py-2 bg-secondary-dark border border-gray-600 rounded-md shadow-sm focus:ring-accent-blue focus:border-accent-blue"/>
+        <label htmlFor={name} className="block font-medium text-text-secondary-dark mb-1">{label}</label>
+        <textarea id={name} name={name} value={value} onChange={onChange} required={required} rows={3} className={baseInputClasses}/>
     </div>
 );
 const SelectField: React.FC<{name: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: string[]}> = ({ name, label, value, onChange, options}) => (
     <div>
-        <label htmlFor={name} className="block font-medium text-subtle-text">{label}</label>
-        <select id={name} name={name} value={value} onChange={onChange} className="mt-1 block w-full h-10 pl-3 pr-10 py-2 text-base border-gray-600 bg-secondary-dark focus:outline-none focus:ring-accent-blue focus:border-accent-blue sm:text-sm rounded-md">
+        <label htmlFor={name} className="block font-medium text-text-secondary-dark mb-1">{label}</label>
+        <select id={name} name={name} value={value} onChange={onChange} className={baseInputClasses}>
             {options.map(opt => <option key={opt}>{opt}</option>)}
         </select>
     </div>

@@ -121,8 +121,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 managers.forEach(manager => {
                     sendEmailNotification(
                         manager,
-                        `High Priority Ticket Created: ${newTicket.id}`,
-                        `A new high-priority ticket "${newTicket.title}" has been created.`
+                        `High-Priority Ticket Created: #${newTicket.id}`,
+                        `A new high-priority ticket #${newTicket.id} ("${newTicket.title}") has been created and requires your attention.`
                     );
                 });
             }
@@ -139,8 +139,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
             const creator = users.find(u => u.id === updatedTicket.createdBy);
             const assignees = users.filter(u => updatedTicket.assignedTo.includes(u.id));
-            const subject = `Ticket Status Update: ${updatedTicket.id} is now ${status}`;
-            const body = `The status of ticket "${updatedTicket.title}" is now "${status}".`;
+            const subject = `Ticket #${updatedTicket.id} Status Updated to "${status}"`;
+            const body = `The status of ticket #${updatedTicket.id} ("${updatedTicket.title}") has been updated to "${status}".`;
             
             if (creator && creator.id !== actorId) sendEmailNotification(creator, subject, body);
             assignees.forEach(assignee => {
@@ -162,8 +162,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             assignedUsers.forEach(user => {
                 sendEmailNotification(
                     user,
-                    `New Ticket Assignment: ${ticketId}`,
-                    `You have been assigned to a new ticket: "${updatedTicket.title}".`
+                    `You've Been Assigned to Ticket #${ticketId}`,
+                    `You have been assigned to a new ticket: #${updatedTicket.id} ("${updatedTicket.title}"). Please review the details in the TurnKey app.`
                 );
             });
         } catch (error) {

@@ -34,8 +34,8 @@ const PasswordInput: React.FC<PasswordInputProps> = ({ value, onChange, id, labe
 
     const strengthColor = useMemo(() => {
         if (strengthScore <= 2) return 'bg-red-500';
-        if (strengthScore <= 4) return 'bg-brand-orange';
-        return 'bg-brand-cyan';
+        if (strengthScore <= 4) return 'bg-yellow-500';
+        return 'bg-green-500';
     }, [strengthScore]);
     
     return (
@@ -48,16 +48,16 @@ const PasswordInput: React.FC<PasswordInputProps> = ({ value, onChange, id, labe
                     onChange={(e) => onChange(e.target.value)}
                     required
                     placeholder={label}
-                    className="w-full bg-input-bg rounded-full py-3 px-6 text-text-light placeholder-text-subtle outline-none focus:ring-2 focus:ring-brand-pink transition-all"
+                    className="w-full bg-dark-input rounded-lg py-3 px-4 text-text-primary-dark placeholder-text-secondary-dark outline-none focus:ring-2 focus:ring-accent-orange transition-all border border-transparent focus:border-accent-orange"
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-5 flex items-center text-sm leading-5 text-text-subtle">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-sm leading-5 text-text-secondary-dark">
                     {showPassword ? <EyeSlashIcon className="h-5 w-5"/> : <EyeIcon className="h-5 w-5"/>}
                 </button>
             </div>
             
             {value.length > 0 && (
-                 <div className="space-y-1 text-xs text-text-subtle px-4">
-                    <div className="w-full bg-white/10 rounded-full h-1.5">
+                 <div className="space-y-1 text-xs px-2">
+                    <div className="w-full bg-dark-input rounded-full h-1.5">
                         <div className={`h-1.5 rounded-full transition-all duration-300 ${strengthColor}`} style={{ width: `${(strengthScore / 5) * 100}%` }}></div>
                     </div>
                 </div>

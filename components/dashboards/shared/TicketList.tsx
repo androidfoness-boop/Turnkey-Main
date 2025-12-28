@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, ReactNode } from 'react';
+import React, { useState, useEffect, useMemo, ReactNode } from 'react';
 import { ServiceTicket, TicketStatus, Role, TicketPriority } from '../../../types';
 import Modal from '../../common/Modal';
 import { useAppContext } from '../../../hooks/useAppContext';
@@ -11,22 +11,38 @@ interface TicketListProps {
 }
 
 const TicketList: React.FC<TicketListProps> = ({ tickets, actionButtons }) => {
-    const { currentUser, updateTicketStatus, addNotification, users } = useAppContext();
+    const { currentUser, updateTicketStatus, addNotification, users, assignTicket } = useAppContext();
     const [filter, setFilter] = useState<string>('All');
     const [selectedTicket, setSelectedTicket] = useState<ServiceTicket | null>(null);
+    const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        if (selectedTicket) {
+            setSelectedAssignees(selectedTicket.assignedTo || []);
+        }
+    }, [selectedTicket]);
 
     const filteredTickets = useMemo(() => {
-        if (filter === 'All') return tickets;
-        return tickets.filter(t => t.status === filter);
-    }, [tickets, filter]);
+        return tickets
+            .filter(t => filter === 'All' || t.status === filter)
+            .filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()) || t.id.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [tickets, filter, searchTerm]);
 
-    const getStatusColor = (status: TicketStatus) => {
+    const canAssign = currentUser && [Role.ADMIN, Role.SUPERVISOR, Role.EMPLOYER].includes(currentUser.role);
+
+    const availableEmployees = useMemo(() => {
+        if (!selectedTicket) return [];
+        return users.filter(u => u.role === Role.EMPLOYEE && u.organizationId === selectedTicket.organizationId);
+    }, [users, selectedTicket]);
+
+    const getStatusInfo = (status: TicketStatus) => {
         switch (status) {
-            case TicketStatus.COMPLETED: case TicketStatus.SOLVED: return 'bg-accent-green';
-            case TicketStatus.IN_PROGRESS: return 'bg-blue-500';
-            case TicketStatus.ASSIGNED: return 'bg-yellow-500';
-            case TicketStatus.REJECTED: return 'bg-red-500';
-            default: return 'bg-gray-500';
+            case TicketStatus.COMPLETED: case TicketStatus.SOLVED: return { color: 'bg-green-500', text: 'Completed' };
+            case TicketStatus.IN_PROGRESS: return { color: 'bg-blue-500', text: 'In Progress' };
+            case TicketStatus.ASSIGNED: return { color: 'bg-yellow-500', text: 'Assigned' };
+            case TicketStatus.REJECTED: return { color: 'bg-red-500', text: 'Rejected' };
+            default: return { color: 'bg-gray-500', text: 'Pending' };
         }
     };
     
@@ -35,54 +51,20 @@ const TicketList: React.FC<TicketListProps> = ({ tickets, actionButtons }) => {
         updateTicketStatus(ticketId, status, currentUser?.id);
     };
 
-    const handleExportCSV = () => {
-        if (filteredTickets.length === 0) {
-            addNotification("No ticket data to export.", "info");
-            return;
+    const handleAssigneeCheckboxChange = (employeeId: string) => {
+        setSelectedAssignees(prev =>
+            prev.includes(employeeId)
+                ? prev.filter(id => id !== employeeId)
+                : [...prev, employeeId]
+        );
+    };
+
+    const handleSaveAssignment = () => {
+        if (selectedTicket) {
+            assignTicket(selectedTicket.id, selectedAssignees);
+            addNotification(`Ticket ${selectedTicket.id} assignment updated.`, 'success');
+            setSelectedTicket(null);
         }
-
-        const headers = ["ID", "Title", "Status", "Priority", "Category", "Hierarchy", "Request Type", "Start Date", "End Date", "Days", "Employees Needed", "Assigned To", "Created By", "Organization ID"];
-        
-        const escapeCsvField = (field: any): string => {
-            const stringField = String(field ?? '');
-            if (/[",\n]/.test(stringField)) {
-                return `"${stringField.replace(/"/g, '""')}"`;
-            }
-            return stringField;
-        };
-
-        const csvRows = [headers.join(',')];
-        filteredTickets.forEach(ticket => {
-            const row = [
-                escapeCsvField(ticket.id),
-                escapeCsvField(ticket.title),
-                escapeCsvField(ticket.status),
-                escapeCsvField(ticket.priority),
-                escapeCsvField(ticket.category),
-                escapeCsvField(ticket.hierarchy),
-                escapeCsvField(ticket.requestType),
-                escapeCsvField(ticket.startDate),
-                escapeCsvField(ticket.endDate),
-                escapeCsvField(ticket.days),
-                escapeCsvField(ticket.employeesNeeded),
-                escapeCsvField(ticket.assignedTo.join('; ')), // Join array
-                escapeCsvField(ticket.createdBy),
-                escapeCsvField(ticket.organizationId),
-            ];
-            csvRows.push(row.join(','));
-        });
-
-        const csvString = csvRows.join('\n');
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `turnkey_tickets_${filter}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        addNotification("Ticket data exported successfully.", "success");
     };
 
     const employeeActionButtons = (ticket: ServiceTicket) => {
@@ -90,100 +72,115 @@ const TicketList: React.FC<TicketListProps> = ({ tickets, actionButtons }) => {
         if (!canTakeAction) return null;
 
         return (
-            <div className="flex flex-wrap gap-2 mt-2">
+            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border-dark">
                 {ticket.status === TicketStatus.ASSIGNED && (
-                    <button onClick={(e) => handleEmployeeAction(e, ticket.id, TicketStatus.IN_PROGRESS)} className="text-xs px-2 py-1 bg-green-500 text-white rounded-full hover:bg-green-600">Accept</button>
+                    <button onClick={(e) => handleEmployeeAction(e, ticket.id, TicketStatus.IN_PROGRESS)} className="text-xs px-3 py-1 bg-green-600 text-white rounded-full hover:bg-green-700">Accept</button>
                 )}
-                <button onClick={(e) => handleEmployeeAction(e, ticket.id, TicketStatus.IN_PROGRESS)} className="text-xs px-2 py-1 bg-blue-500 text-white rounded-full hover:bg-blue-600">In Process</button>
-                <button onClick={(e) => handleEmployeeAction(e, ticket.id, TicketStatus.SOLVED)} className="text-xs px-2 py-1 bg-purple-500 text-white rounded-full hover:bg-purple-600">Solved</button>
-                <button onClick={(e) => handleEmployeeAction(e, ticket.id, TicketStatus.REJECTED)} className="text-xs px-2 py-1 bg-red-500 text-white rounded-full hover:bg-red-600">Reject</button>
+                 <button onClick={(e) => handleEmployeeAction(e, ticket.id, TicketStatus.IN_PROGRESS)} className="text-xs px-3 py-1 bg-blue-600 text-white rounded-full hover:bg-blue-700">In Process</button>
+                 <button onClick={(e) => handleEmployeeAction(e, ticket.id, TicketStatus.SOLVED)} className="text-xs px-3 py-1 bg-purple-600 text-white rounded-full hover:bg-purple-700">Solved</button>
+                 <button onClick={(e) => handleEmployeeAction(e, ticket.id, TicketStatus.REJECTED)} className="text-xs px-3 py-1 bg-red-600 text-white rounded-full hover:bg-red-700">Reject</button>
             </div>
         );
     };
 
     return (
-        <div className="space-y-3">
-             <div className="flex justify-between items-center flex-wrap gap-2">
-                 <div className="flex space-x-2 overflow-x-auto pb-2">
-                    {['All', ...Object.values(TicketStatus)].map(status => (
-                        <button 
-                            key={status} 
-                            onClick={() => setFilter(status)}
-                            className={`px-3 py-1 text-sm font-medium rounded-full transition-colors flex-shrink-0 ${filter === status ? 'bg-accent-green text-primary-dark' : 'bg-secondary-dark text-subtle-text hover:bg-gray-600'}`}
-                        >
-                            {status}
-                        </button>
-                    ))}
+        <div className="space-y-4">
+             <div className="relative">
+                <input 
+                    type="text"
+                    placeholder="Search tickets by name or ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-dark-input border border-border-dark rounded-full text-text-primary-dark placeholder-text-secondary-dark focus:outline-none focus:ring-2 focus:ring-accent-orange"
+                />
+                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-text-secondary-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 </div>
-                {(currentUser?.role === Role.ADMIN || currentUser?.role === Role.SUPERVISOR) && (
-                     <button onClick={handleExportCSV} className="flex items-center space-x-1.5 px-3 py-1.5 bg-accent-green text-primary-dark font-semibold rounded-lg shadow-md hover:bg-opacity-80 transition-colors text-xs">
-                        <ExportIcon className="h-4 w-4" />
-                        <span>Export</span>
-                    </button>
-                )}
             </div>
             
             <div className="space-y-3">
                 {filteredTickets.map(ticket => (
-                    <div key={ticket.id} onClick={() => setSelectedTicket(ticket)} className="p-4 rounded-xl bg-secondary-dark cursor-pointer transition-transform hover:scale-105 hover:bg-gray-700">
-                        <div className="flex items-start space-x-3">
-                             <div className={`w-3 h-3 mt-1.5 rounded-full flex-shrink-0 ${getStatusColor(ticket.status)}`}></div>
-                            <div className="flex-grow">
-                                <p className="font-semibold text-light-text">{ticket.title}</p>
-                                <p className="text-xs text-subtle-text">{ticket.id} - {ticket.priority} - {ticket.category}</p>
-                                {actionButtons && <div>{actionButtons(ticket.id)}</div>}
-                                {currentUser?.role === Role.EMPLOYEE && employeeActionButtons(ticket)}
-                            </div>
-                            <span className="text-xs text-subtle-text">{ticket.startDate.split('T')[0]}</span>
+                    <div key={ticket.id} onClick={() => setSelectedTicket(ticket)} className="bg-dark-card p-4 rounded-2xl cursor-pointer transition-all hover:bg-border-dark">
+                        <div className="flex items-center justify-between">
+                            <p className="font-semibold text-text-primary-dark">{ticket.title}</p>
+                            <svg className="h-5 w-5 text-text-secondary-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                         </div>
+                        <div className="flex items-center space-x-2 text-xs mt-1 text-text-secondary-dark">
+                             <div className={`w-2 h-2 rounded-full ${getStatusInfo(ticket.status).color}`}></div>
+                            <span>{getStatusInfo(ticket.status).text}</span>
+                            <span>&bull;</span>
+                            <span>{ticket.id}</span>
+                             <span>&bull;</span>
+                            <span>Priority: {ticket.priority}</span>
+                        </div>
+                         {actionButtons && <div className="mt-2">{actionButtons(ticket.id)}</div>}
                     </div>
                 ))}
-                 {filteredTickets.length === 0 && (
-                    <p className="text-center text-subtle-text py-4">No tickets found.</p>
-                )}
             </div>
 
-             <Modal isOpen={!!selectedTicket} onClose={() => setSelectedTicket(null)} title={`Ticket Details: ${selectedTicket?.id}`}>
+            {filteredTickets.length === 0 && (
+                <div className="text-center py-10">
+                    <p className="text-text-secondary-dark">No tickets found.</p>
+                </div>
+            )}
+
+             <Modal isOpen={!!selectedTicket} onClose={() => setSelectedTicket(null)} title={selectedTicket?.title || 'Ticket Details'}>
                 {selectedTicket && (
-                     <div className="space-y-3 text-sm text-light-text">
-                        <h4 className="text-lg font-bold">{selectedTicket.title}</h4>
-                        
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                            <p><strong>Status:</strong> <span className={`font-semibold px-2 py-0.5 rounded-full text-xs ${getStatusColor(selectedTicket.status)}`}>{selectedTicket.status}</span></p>
-                            <p><strong>Priority:</strong> <span className="font-semibold" style={{ color: selectedTicket.priority === TicketPriority.HIGH ? '#D0021B' : selectedTicket.priority === TicketPriority.MEDIUM ? '#F5A623' : '#50E3C2' }}>{selectedTicket.priority}</span></p>
-                            <p><strong>Category:</strong> <span className="text-subtle-text">{selectedTicket.category}</span></p>
-                            <p><strong>Request Type:</strong> <span className="text-subtle-text">{selectedTicket.requestType}</span></p>
-                            <p><strong>Issue Type:</strong> <span className="text-subtle-text">{selectedTicket.issueType}</span></p>
-                             <p><strong>Hierarchy Level:</strong> <span className="text-subtle-text">{selectedTicket.hierarchy}</span></p>
-                        </div>
-
-                        <div className="pt-2">
-                             <p><strong>Description:</strong></p>
-                             <p className="text-subtle-text p-2 bg-primary-dark rounded-md mt-1">{selectedTicket.description}</p>
-                        </div>
-                         {selectedTicket.details && (
-                            <div>
-                                <p><strong>More Details:</strong></p>
-                                <p className="text-subtle-text p-2 bg-primary-dark rounded-md mt-1">{selectedTicket.details}</p>
+                    <>
+                        <div className="space-y-4 text-sm text-text-primary-dark">
+                            <div className="p-3 bg-dark-input rounded-lg">
+                                <p className="font-semibold text-text-secondary-dark">Description</p>
+                                <p>{selectedTicket.description}</p>
                             </div>
-                         )}
+                            
+                            <div className="border-t border-border-dark pt-3">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div><strong className="text-text-secondary-dark block">Status</strong> {selectedTicket.status}</div>
+                                    <div><strong className="text-text-secondary-dark block">Priority</strong> {selectedTicket.priority}</div>
+                                    <div><strong className="text-text-secondary-dark block">Category</strong> {selectedTicket.category}</div>
+                                    <div><strong className="text-text-secondary-dark block">Dates</strong> {selectedTicket.startDate.split('T')[0]} - {selectedTicket.endDate.split('T')[0]}</div>
+                                    <div><strong className="text-text-secondary-dark block">Assigned To</strong> {users.filter(u => selectedTicket.assignedTo.includes(u.id)).map(u => u.name).join(', ') || 'N/A'}</div>
+                                </div>
+                            </div>
 
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2">
-                             <p><strong>Dates:</strong> <span className="text-subtle-text">{selectedTicket.startDate.replace('T', ' ')} to {selectedTicket.endDate.replace('T', ' ')} ({selectedTicket.days} days)</span></p>
-                            <p><strong>Tenure:</strong> <span className="text-subtle-text">{selectedTicket.tenure} days</span></p>
-                            <p><strong>Employees Needed:</strong> <span className="text-subtle-text">{selectedTicket.employeesNeeded}</span></p>
-                             <p><strong>Required Staff:</strong> <span className="text-subtle-text">{selectedTicket.employeeType}</span></p>
+                            {currentUser?.role === Role.EMPLOYEE && (
+                                employeeActionButtons(selectedTicket)
+                            )}
                         </div>
-                        
-                         <div className="pt-2">
-                            <p><strong>Created By:</strong> <span className="text-subtle-text">{users.find(u => u.id === selectedTicket.createdBy)?.name || 'Unknown'}</span></p>
-                            <p><strong>Assigned To:</strong> <span className="text-subtle-text">{
-                                selectedTicket.assignedTo.length > 0 
-                                ? users.filter(u => selectedTicket.assignedTo.includes(u.id)).map(u => u.name).join(', ') 
-                                : 'N/A'
-                            }</span></p>
-                         </div>
-                     </div>
+                        {canAssign && (
+                            <div className="pt-4 mt-4 border-t border-border-dark">
+                                <h4 className="text-md font-bold mb-2 text-text-primary-dark">Manage Assignment</h4>
+                                <div className="mt-1 block w-full bg-dark-input rounded-md h-32 overflow-y-auto p-2 border border-border-dark">
+                                    {availableEmployees.length > 0 ? availableEmployees.map(emp => (
+                                        <div key={emp.id} className="flex items-center space-x-3 p-1 rounded hover:bg-border-dark">
+                                            <input
+                                                type="checkbox"
+                                                id={`assignee-${emp.id}`}
+                                                value={emp.id}
+                                                checked={selectedAssignees.includes(emp.id)}
+                                                onChange={() => handleAssigneeCheckboxChange(emp.id)}
+                                                disabled={!emp.isAvailable}
+                                                className="h-4 w-4 rounded bg-dark-input border-text-secondary-dark text-accent-orange focus:ring-accent-orange cursor-pointer disabled:cursor-not-allowed"
+                                            />
+                                            <label htmlFor={`assignee-${emp.id}`} className={`text-sm ${!emp.isAvailable ? 'text-text-secondary-dark line-through cursor-not-allowed' : 'text-text-primary-dark cursor-pointer'}`}>
+                                                {emp.name}
+                                            </label>
+                                        </div>
+                                    )) : (
+                                        <p className="text-sm text-text-secondary-dark text-center pt-10">No available employees.</p>
+                                    )}
+                                </div>
+                                <div className="flex justify-end mt-4">
+                                    <button
+                                        onClick={handleSaveAssignment}
+                                        className="px-4 py-2 bg-accent-orange text-white font-semibold rounded-full shadow-md hover:bg-accent-orange-hover transition-colors"
+                                    >
+                                        Update Assignment
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </Modal>
         </div>

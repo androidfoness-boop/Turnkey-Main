@@ -1,40 +1,19 @@
+
 import React, { useEffect } from 'react';
 
-// FIX: Define SplashScreenProps interface for the component's props.
 interface SplashScreenProps {
     onFinish: () => void;
 }
 
-const GradientBackground: React.FC = () => (
-    <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-        <svg width="100%" height="100%" viewBox="0 0 375 812" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-            <defs>
-                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: '#fe8c69', stopOpacity: 1 }} />
-                    <stop offset="100%" style={{ stopColor: '#f75c8e', stopOpacity: 1 }} />
-                </linearGradient>
-                <linearGradient id="grad2" x1="0%" y1="100%" x2="100%" y2="0%">
-                    <stop offset="0%" style={{ stopColor: '#78ffd6', stopOpacity: 1 }} />
-                    <stop offset="100%" style={{ stopColor: '#4A90E2', stopOpacity: 1 }} />
-                </linearGradient>
-                 <linearGradient id="grad3" x1="50%" y1="0%" x2="50%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: '#c451c4', stopOpacity: 1 }} />
-                    <stop offset="100%" style={{ stopColor: '#f75c8e', stopOpacity: 1 }} />
-                </linearGradient>
-            </defs>
-            <path d="M-100 -50 C 150 300, 200 -100, 450 150 L 450 -50 Z" fill="url(#grad1)" />
-            <path d="M-50 850 C 250 500, 450 900, 400 600 L -50 850 Z" fill="url(#grad2)" />
-            <path d="M-50 200 C 100 500, 300 100, 450 450 L 450 812 L -50 812 Z" fill="url(#grad3)" opacity="0.8" />
+const TurnKeyLogo: React.FC = () => (
+    <div className="flex items-center justify-center space-x-3">
+         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5V13H8v-2h3V9.5c0-1.28.69-2.35 1.7-2.82l.8-.38v2.1l-.4.2c-.3.12-.4.43-.4.7v1.2h2.5l-.5 2H13v3.5h-2z" fill="#FF9500"/>
         </svg>
+        <h1 className="text-5xl font-bold text-text-primary-dark tracking-wider">TurnKey</h1>
     </div>
 );
 
-
-const CoooLogo = () => (
-    <div className="flex flex-col items-center justify-center space-y-2">
-        <h1 className="text-6xl font-bold text-text-light tracking-widest">TurnKey</h1>
-    </div>
-);
 
 const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     useEffect(() => {
@@ -46,10 +25,9 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     }, [onFinish]);
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-full relative text-text-light">
-            <GradientBackground />
+        <div className="flex flex-col items-center justify-center min-h-full auth-bg">
             <div className="z-10 animate-pulse">
-                <CoooLogo />
+                <TurnKeyLogo />
             </div>
         </div>
     );

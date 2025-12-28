@@ -13,10 +13,10 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-secondary-dark rounded-xl shadow-xl max-w-2xl w-full overflow-hidden border border-gray-700" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-between items-center p-4 border-b border-gray-700">
-                    <h3 className="text-xl font-semibold text-light-text">{title}</h3>
-                    <button onClick={onClose} className="text-subtle-text hover:text-light-text">
+            <div className="bg-dark-card rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-border-dark" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center p-4 border-b border-border-dark">
+                    <h3 className="text-lg font-semibold text-text-primary-dark">{title}</h3>
+                    <button onClick={onClose} className="text-text-secondary-dark hover:text-text-primary-dark">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>

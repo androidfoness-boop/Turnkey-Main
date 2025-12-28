@@ -5,7 +5,7 @@
     <meta charset="UTF-g">
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cooo.</title>
+    <title>TurnKey</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,21 +29,18 @@
               sans: ['Poppins', 'sans-serif'],
             },
             colors: {
-              'brand-bg': '#6a11cb', // A base purple for the body
-              'brand-purple': '#c451c4',
-              'brand-pink': '#f75c8e',
-              'brand-orange': '#fe8c69',
-              'brand-cyan': '#78ffd6',
-              'text-light': '#ffffff',
-              'text-subtle': '#f0f0f0',
-              'input-bg': 'rgba(255, 255, 255, 0.2)',
-              // Kept old theme for dashboard
-              'primary-dark': '#1A202C',
-              'secondary-dark': '#2D3748',
-              'accent-blue': '#4A90E2',
-              'accent-green': '#50E3C2',
-              'light-text': '#F7FAFC',
-              'subtle-text': '#A0AEC0',
+              'dark-bg': '#121212',
+              'dark-card': '#1E1E1E',
+              'dark-input': '#2A2A2A',
+              'accent-orange': '#FF9500',
+              'accent-orange-hover': '#E58600',
+              'text-primary-dark': '#FFFFFF',
+              'text-secondary-dark': '#A0A0A0',
+              'border-dark': '#383838',
+
+              // Light theme placeholders
+              'light-bg': '#F2F2F7',
+              'light-card': '#FFFFFF',
             }
           }
         }
@@ -51,26 +48,30 @@
     </script>
     <style>
       body {
-        background-color: #6a11cb;
+        background-color: #121212;
       }
       #app-container {
         -webkit-tap-highlight-color: transparent;
+        background-color: #121212;
+      }
+      .auth-bg {
+         background-color: #121212;
       }
       ::-webkit-scrollbar {
         width: 6px;
       }
       ::-webkit-scrollbar-track {
-        background: rgba(0,0,0,0.1);
+        background: #1E1E1E;
         border-radius: 3px;
       }
       ::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.3);
+        background: #383838;
         border-radius: 3px;
       }
     </style>
 </head>
 <body class="font-sans">
-    <div id="app-container" class="mx-auto max-w-sm h-screen min-h-[600px] overflow-hidden relative bg-brand-bg">
+    <div id="app-container" class="mx-auto max-w-sm h-screen min-h-[600px] overflow-hidden relative">
       <div id="root" class="h-full"></div>
     </div>
     <script type="module" src="/index.tsx"></script>
