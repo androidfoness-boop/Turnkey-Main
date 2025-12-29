@@ -12,7 +12,15 @@ interface EmployeeDashboardProps {
 const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ activeView }) => {
     const { currentUser, tickets, updateUser } = useAppContext();
 
-    const myTickets = tickets.filter(t => t.assignedTo.includes(currentUser?.id || ''));
+    // Tickets assigned to me for stats
+    const myTickets = useMemo(() => 
+        tickets.filter(t => t.assignedTo.includes(currentUser?.id || '')),
+    [tickets, currentUser]);
+
+    // All tickets in my organization for the list view
+    const orgTickets = useMemo(() =>
+        tickets.filter(t => t.organizationId === currentUser?.organizationId),
+    [tickets, currentUser]);
 
     const ticketStats = useMemo(() => {
         const stats = {
@@ -36,9 +44,9 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ activeView }) => 
     };
 
     const ticketsComponent = (
-        <div className="bg-secondary-dark p-4 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4 text-light-text">Assigned Tickets</h2>
-            <TicketList tickets={myTickets} />
+        <div className="bg-dark-card p-4 rounded-2xl">
+            <h2 className="text-xl font-semibold mb-4 text-text-primary-dark">Service Tickets</h2>
+            <TicketList tickets={orgTickets} />
         </div>
     );
 
@@ -46,33 +54,32 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ activeView }) => 
         <div className="space-y-6">
             {activeView === 'overview' && (
                 <>
-                    <div className="flex justify-between items-center">
-                        <h1 className="text-3xl font-bold">My Overview</h1>
-                        <div className="flex items-center space-x-4">
-                            <span className="font-medium">Availability:</span>
+                    <div className="flex justify-between items-center bg-dark-card p-4 rounded-2xl">
+                        <h1 className="text-lg font-bold">My Availability</h1>
+                        <div className="flex items-center space-x-2">
+                            <span className={`text-sm font-medium ${currentUser?.isAvailable ? 'text-green-400' : 'text-yellow-400'}`}>
+                                {currentUser?.isAvailable ? 'Available' : 'Unavailable'}
+                            </span>
                             <label htmlFor="availability-toggle" className="flex items-center cursor-pointer">
                                 <div className="relative">
                                     <input type="checkbox" id="availability-toggle" className="sr-only" checked={currentUser?.isAvailable} onChange={handleAvailabilityToggle} />
-                                    <div className="block bg-gray-600 w-14 h-8 rounded-full"></div>
-                                    <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${currentUser?.isAvailable ? 'transform translate-x-full bg-accent-green' : ''}`}></div>
+                                    <div className="block bg-dark-input w-12 h-6 rounded-full"></div>
+                                    <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${currentUser?.isAvailable ? 'transform translate-x-6 bg-accent-orange' : ''}`}></div>
                                 </div>
                             </label>
                         </div>
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-1">
-                            <PieChartComponent data={ticketStats} title="My Ticket Status" />
-                        </div>
-                        <div className="lg:col-span-2">
-                           {ticketsComponent}
-                        </div>
+                    
+                    <div className="bg-dark-card p-4 rounded-2xl">
+                        <PieChartComponent data={ticketStats} title="My Ticket Status" />
                     </div>
+                    
+                    {ticketsComponent}
                 </>
             )}
 
             {activeView === 'tickets' && (
                 <div className="space-y-6">
-                    <h1 className="text-3xl font-bold">My Service Requests</h1>
                     {ticketsComponent}
                 </div>
             )}

@@ -113,6 +113,19 @@ const TicketList: React.FC<TicketListProps> = ({ tickets, actionButtons }) => {
                              <span>&bull;</span>
                             <span>Priority: {ticket.priority}</span>
                         </div>
+                         {currentUser?.role === Role.EMPLOYEE && (ticket.status === TicketStatus.PENDING || ticket.status === TicketStatus.ASSIGNED) && !ticket.assignedTo.includes(currentUser.id) && (
+                             <div className="mt-3 text-right">
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (currentUser) assignTicket(ticket.id, [currentUser.id]);
+                                    }}
+                                    className="text-xs px-3 py-1 bg-accent-orange text-white font-semibold rounded-full hover:bg-accent-orange-hover"
+                                >
+                                    Assign to Me
+                                </button>
+                             </div>
+                         )}
                          {actionButtons && <div className="mt-2">{actionButtons(ticket.id)}</div>}
                     </div>
                 ))}
